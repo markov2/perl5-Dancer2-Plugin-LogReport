@@ -12,5 +12,6 @@ version 2.00:
 	Fixes:
 	- do not leak internal error messages to end-users [Andy Beverly]
 
-	Extracted from the Log-Report distribution.
+	Extracted the Dancer modules from the Log-Report and
+	Log-Report-Template distributions.
 

@@ -25,7 +25,7 @@ my $_settings;
 #--------------------
 =chapter NAME
 
-Dancer2::Plugin::LogReport - logging and exceptions via Log::Report
+Dancer2::Plugin::LogReport - logging, exceptions and translations in Dancer2 via Log::Report
 
 =chapter SYNOPSIS
 

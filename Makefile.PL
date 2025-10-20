@@ -59,12 +59,12 @@ my %prereq  = (
 #warn Dumper \%prereq;
 
 WriteMakefile
-	NAME      => 'Log::Report',
+	NAME      => 'Dancer2-Plugin-LogReport',
 	VERSION   => $version,
 	PREREQ_PM => \%prereq,
 
 	AUTHOR    => 'Mark Overmeer <markov@cpan.org>',
-	ABSTRACT  => 'report a problem, pluggable handlers and language support',
+	ABSTRACT  => 'logging, exceptions and translations in Dancer2 via Log::Report',
 	LICENSE   => 'perl_5',
 
 	META_MERGE => {
