@@ -1,0 +1,16 @@
+
+==== version history of distribution Dancer2-Plugin-LogReport
+
+Unless noted otherwise, these changes where initiated and applied by
+Mark Overmeer.
+
+version 2.00:
+
+	Changes:
+	- Requires Dancer2 version 2.00
+
+	Fixes:
+	- do not leak internal error messages to end-users [Andy Beverly]
+
+	Extracted from the Log-Report distribution.
+
