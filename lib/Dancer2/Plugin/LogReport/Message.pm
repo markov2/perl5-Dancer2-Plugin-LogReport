@@ -4,10 +4,12 @@
 #oodist: testing, however the code of this development version may be broken!
 
 package Dancer2::Plugin::LogReport::Message;
-use parent 'Log::Report::Message';
+use base 'Log::Report::Message';
 
 use strict;
 use warnings;
+
+use Log::Report   'dancer2-plugin-logreport';
 
 #--------------------
 =chapter NAME
@@ -58,9 +60,10 @@ my %reason2color = (
 Get a suitable bootstrap context color for the message. This can be
 used as per the SYNOPSIS.
 
-C<success> is used for M<Dancer2::Plugin::LogReport::success()> messages,
-C<info> colors are used for messages C<notice> and below, C<warning> is used
-for C<warning> and C<mistake>, C<danger> is used for all other messages
+CSS class C<success> is used for M<Dancer2::Plugin::LogReport::success()>
+messages, C<info> colors are used for messages C<notice> and below,
+C<warning> is used for C<warning> and C<mistake>, C<danger> is used for
+all other messages.
 =cut
 
 sub bootstrap_color

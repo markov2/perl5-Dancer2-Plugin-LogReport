@@ -10,14 +10,15 @@ use strict;
 use warnings;
 
 use Log::Report  'dancer2-plugin-logreport', syntax => 'REPORT';
+
 use Moo;
 use Dancer2::Core::Types;
 use Scalar::Util         qw/blessed/;
 
 our $AUTHORITY = 'cpan:MARKOV';
 
-my %level_dancer2lr =
-(	core  => 'TRACE',
+my %level_dancer2lr = (
+	core  => 'TRACE',
 	debug => 'TRACE',
 );
 
@@ -37,7 +38,7 @@ sub BUILD
 	{	my $config = $configs->{$name} || {};
 		if(keys %$config)
 		{	my $type = delete $config->{type}
-				or die "dispatcher configuration $name without type";
+				or die "dispatcher configuration $name without type";  # No LR yet
 
 			dispatcher $type, $name, %$config;
 		}

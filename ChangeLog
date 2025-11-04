@@ -4,10 +4,7 @@
 Unless noted otherwise, these changes where initiated and applied by
 Mark Overmeer.
 
-version 2.00:
-
-	Changes:
-	- Requires Dancer2 version 2.00
+version 2.00: Tue  4 Nov 16:45:48 CET 2025
 
 	Fixes:
 	- do not leak internal error messages to end-users [Andy Beverly]

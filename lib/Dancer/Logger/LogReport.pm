@@ -9,8 +9,9 @@ use base 'Dancer::Logger::Abstract', 'Exporter';
 use strict;
 use warnings;
 
+use Log::Report             'dancer2-plugin-logreport', import => 'report';
+
 use Scalar::Util            qw/blessed/;
-use Log::Report             'log-report', import => 'report';
 use Log::Report::Dispatcher ();
 
 our $AUTHORITY = 'cpan:MARKOV';
@@ -23,8 +24,8 @@ our @EXPORT    = qw/
 	panic
 /;
 
-my %level_dancer2lr =
-(	core  => 'TRACE',
+my %level_dancer2lr = (
+	core  => 'TRACE',
 	debug => 'TRACE',
 );
 

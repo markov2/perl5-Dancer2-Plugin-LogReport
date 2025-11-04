@@ -9,12 +9,13 @@ use warnings;
 use strict;
 use version;
 
-BEGIN { use Log::Report () }  # require very early   XXX MO: useless?
+BEGIN { use Log::Report () }  # require very early
 
-use Dancer2::Plugin 2.0;
-use Dancer2::Plugin::LogReport::Message;
+use Dancer2::Plugin;    # register
+use Dancer2::Plugin::LogReport::Message ();
 
-use Log::Report  'log-report', syntax => 'REPORT',
+use Log::Report  'dancer2-plugin-logreport',
+	syntax => 'REPORT',
 	message_class => 'Dancer2::Plugin::LogReport::Message';
 
 use Scalar::Util qw/blessed refaddr/;
@@ -122,6 +123,7 @@ on_plugin_import
 			name => 'core.app.route_exception',
 			code => sub {
 				my ($app, $error) = @_;
+
 				# If there is no request object then we are in an early hook
 				# and Dancer will not handle an exception cleanly (which will
 				# result in a stacktrace to the browser, a potential security
@@ -131,10 +133,12 @@ on_plugin_import
 				# hook_exception below is now used instead to avoid any stack
 				# information in the browser.
 				my $is_fatal = $app->request ? 1 : 0;
+
 				# Use a flag to avoid the panic here throwing a second panic in
 				# the exception hook below.
 				$app->request->var(_lr_panic_thrown => 1)
 					if $app->request;
+
 				report {is_fatal => $is_fatal}, 'PANIC' => $error;
 			},
 		),
@@ -146,21 +150,22 @@ on_plugin_import
 			code => sub {
 				my ($app, $error, $hook_name) = @_;
 				my $fatal_error_message = _fatal_error_message();
+
 				# If we are after the request then we need to override the
 				# content now (which will likely be an ugly exception message).
 				# This is because no further changes are made to the content
 				# after the request (unlike at other times of the response
 				# cycle)
 				if ($hook_name =~ /after_request/)
-				{
-					$app->response->content($fatal_error_message);
+				{	$app->response->content($fatal_error_message);
+
 					# Prevent dancer throwing in its own ugly messages
-					$app->response->halt
+					$app->response->halt;
 				}
 
 				# See comment above about not throwing same panic twice
-				report 'PANIC' => $error
-				unless $app->request->var('_lr_panic_thrown');
+				$app->request->var('_lr_panic_thrown')
+					or report PANIC => $error;
 			},
 		),
 	) if version->parse($Dancer2::Plugin::VERSION) >= 2;
@@ -210,9 +215,7 @@ on_plugin_import
 
 	# This is so that all messages go into the session, to be displayed
 	# on the web page (if required)
-	dispatcher CALLBACK => 'error_handler',
-		callback => \&_error_handler,
-		mode     => 'DEBUG'
+	dispatcher CALLBACK => 'error_handler', callback => \&_error_handler, mode => 'DEBUG'
 		unless dispatcher find => 'error_handler';
 
 	Log::Report::Dispatcher->addSkipStack( sub { $_[0][0] =~
@@ -255,7 +258,6 @@ sub process($$)
 
 register process => \&process;
 
-
 =method fatal_handler
 C<fatal_handler()> allows alternative handlers to be defined in place of (or in
 addition to) the default redirect handler that is called on a fatal error.
@@ -290,10 +292,10 @@ called.
     return if $ctype ne 'application/json';
     status $reason eq 'PANIC' ? 'Internal Server Error' : 'Bad Request';
     $dsl->send_as(JSON => {
-      error       => 1,
-      description => $msg->toString,
+       error       => 1,
+       description => $msg->toString,
     }, {
-        content_type => 'application/json; charset=UTF-8',
+       content_type => 'application/json; charset=UTF-8',
     });
   };
 
@@ -426,10 +428,9 @@ sub _forward_home($)
 	# handling
 	my $req = $dsl->app->request or return;
 
-	return $dsl->send_as(plain => "$msg")
-		if $req->uri eq $page && $req->is_get;
-
-	$dsl->redirect($page);
+	  $req->uri eq $page && $req->is_get
+	? $dsl->send_as(plain => "$msg")
+	: $dsl->redirect($page);
 }
 
 sub _error_handler($$$$)
@@ -467,7 +468,6 @@ sub _error_handler($$$$)
 		# out.
 		ERROR   => $fatal_handler,
 
-		# 'FAULT', 'ALERT', 'FAILURE', 'PANIC',
 		# All these are fatal errors.
 		FAULT   => $fatal_handler,
 		ALERT   => $fatal_handler,
@@ -482,7 +482,7 @@ sub _error_handler($$$$)
 sub _report($@) {
 	my ($reason, $dsl) = (shift, shift);
 
-	my $msg = (blessed($_[0]) && $_[0]->isa('Log::Report::Message'))
+	my $msg = blessed $_[0] && $_[0]->isa('Log::Report::Message')
 		? $_[0] : Dancer2::Core::Role::Logger::_serialize(@_);
 
 	if ($reason eq 'SUCCESS')
@@ -843,8 +843,6 @@ the following configuration to do so:
 
 With the above configuration, you will only be emailed of severe errors, but can
 view the full log information in /var/log/myapp.log
-
-
 =cut
 
 1;

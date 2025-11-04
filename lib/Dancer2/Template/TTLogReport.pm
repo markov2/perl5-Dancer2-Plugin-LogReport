@@ -3,9 +3,11 @@
 #oodist: during its release in the distribution.  You can use this file for
 #oodist: testing, however the code of this development version may be broken!
 
+#XXX rework of Dancer2::Template::TemplateToolkit 1.1.2
+
 package Dancer2::Template::TTLogReport;
 
-#XXX rework of Dancer2::Template::TemplateToolkit 1.1.2
+use Log::Report    'dancer2-plugin-logreport';
 
 use Moo;
 use Dancer2::Core::Types;
@@ -75,8 +77,8 @@ found in the Dancer2 configuration file.
 
 has tt => ( is => 'rw', isa => InstanceOf ['Template'], builder => 1 );
 
-sub _build_tt {
-	my $self	  = shift;
+sub _build_tt()
+{	my $self	  = shift;
 	my %config	  = %{$self->config};
 	my $charset   = $self->charset;
 	my $templater = delete $config{templater}  || 'Log::Report::Template';
@@ -109,8 +111,8 @@ Forwards the %options to M<Log::Report::Template::addTextdomain()>.
   (engine 'template')->addTextdomain(name => 'mydomain')->configure(translator => $tables);
 =cut
 
-sub addTextdomain(%) {
-	my $self = shift;
+sub addTextdomain(%)
+{	my $self = shift;
 	$self->tt->addTextdomain(@_);
 }
 
@@ -125,8 +127,8 @@ variables: C<language> (like "nl"), C<language_territory> (like "nl_BE"),
 and C<locale> (like "nl_BE.utf8").
 =cut
 
-sub render($$) {
-	my ($self, $template, $tokens) = @_;
+sub render($$)
+{	my ($self, $template, $tokens) = @_;
 	my $content = '';
 	my $charset = $self->charset;
 	my @options = (length $charset) ? (binmode => ":encoding($charset)") : ();
@@ -159,30 +161,28 @@ sub render($$) {
 # However, if its not absolute, we want to allow TT2 iterate through the
 # its INCLUDE_PATH, which we set to be $self->views.
 
-sub view_pathname($) {
-	my ($self, $view) = @_;
+sub view_pathname($)
+{	my ($self, $view) = @_;
 	$self->_template_name($view);
 }
 
-sub layout_pathname($) {
-	my ($self, $layout) = @_;
-	path($self->layout_dir, $self->_template_name($layout));
+sub layout_pathname($)
+{	my ($self, $layout) = @_;
+	path $self->layout_dir, $self->_template_name($layout);
 }
 
-sub pathname_exists($) {
-	my ($self, $pathname) = @_;
+sub pathname_exists($)
+{	my ($self, $pathname) = @_;
 
 	# dies if pathname can not be found via TT2's INCLUDE_PATH search
 	my $exists = eval { $self->engine->service->context->template($pathname); 1 };
 	$exists or $self->log_cb->(debug => $@);
-
 	$exists;
 }
 
 1;
 
-__END__
-
+#-----------
 =chapter DETAILS
 
 =section Dancer2 Configuration

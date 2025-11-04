@@ -7,13 +7,15 @@ use Test::More;
 # The versions of the following packages are reported to help understanding
 # the environment in which the tests are run.  This is certainly not a
 # full list of all installed modules.
-my @show_versions =
- qw/Dancer2
-   /;
+my @show_versions = qw/
+	Dancer2
+	Log::Report
+	Log::Report::Optional
+	Log::Report::Lexicon
+/;
 
-#   Log::Report::Optional
-#   Log::Report::Lexicon
 warn "Perl $]\n";
+
 foreach my $package (sort @show_versions)
 {   eval "require $package";
 

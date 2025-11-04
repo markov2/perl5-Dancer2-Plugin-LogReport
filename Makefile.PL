@@ -51,15 +51,16 @@ my %oodist   = (
 );
 
 my %prereq  = (
-	'Log::Report'             => '1.42',
-	'Scalar::Util'            => 0,
+	'Dancer2'          => '0.207',
+	'Log::Report'      => '1.42',
+	'Scalar::Util'     => 0,
 );
 
 #use Data::Dumper;
 #warn Dumper \%prereq;
 
 WriteMakefile
-	NAME      => 'Dancer2-Plugin-LogReport',
+	NAME      => 'Dancer2::Plugin::LogReport',
 	VERSION   => $version,
 	PREREQ_PM => \%prereq,
 
