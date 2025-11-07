@@ -6,6 +6,10 @@ Mark Overmeer.
 
 version 2.02:
 
+	Fixes:
+	- dependency to Log::Report::Template
+	  rt.cpan.org#171523 [Andreas Koenig], cpantesters
+
 version 2.01: Wed  5 Nov 17:35:44 CET 2025
 
 	Fixes:
