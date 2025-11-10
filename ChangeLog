@@ -4,7 +4,9 @@
 Unless noted otherwise, these changes where initiated and applied by
 Mark Overmeer.
 
-version 2.02:
+version 2.03:
+
+version 2.02: Mon 10 Nov 17:38:21 CET 2025
 
 	Fixes:
 	- dependency to Log::Report::Template
