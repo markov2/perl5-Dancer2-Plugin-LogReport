@@ -15,7 +15,7 @@ use Dancer2::Plugin;    # register
 use Dancer2::Plugin::LogReport::Message ();
 
 use Log::Report  'dancer2-plugin-logreport',
-	syntax => 'REPORT',
+	syntax        => 'REPORT',
 	message_class => 'Dancer2::Plugin::LogReport::Message';
 
 use Scalar::Util qw/blessed refaddr/;
@@ -345,7 +345,7 @@ sub _fatal_error_message
 sub _message_add($)
 {	my $msg = shift;
 
-	$session_messages{$msg->reason} && ! $msg->inClass('no_session')
+	$session_messages{$msg->reason} && ! $msg->taggedWith('no_session')
 		or return;
 
 	# Get the DSL, only now that we know it's needed
@@ -393,9 +393,9 @@ of when each one should be used.
 L<Log::Report class functionality|Log::Report::Message.pod#class-STRING-ARRAY>
 to class messages (which can then be tested later):
 
-  notice __x"Class me up", _class => 'label';
+  notice __x"Tag me up", _tag => 'label';
   ...
-  if ($msg->inClass('label')) ...
+  if ($msg->taggedWith('label')) ...
 
 Dancer2::Plugin::LogReport has a special message class, C<no_session>,
 which prevents the message from being saved to the messages session
@@ -487,7 +487,7 @@ sub _report($@) {
 
 	if ($reason eq 'SUCCESS')
 	{	$msg = __$msg unless blessed $msg;
-		$msg = $msg->clone(_class => 'success');
+		$msg = $msg->clone(_tag => 'success');
 		$reason = 'NOTICE';
 	}
 	report uc($reason) => $msg;

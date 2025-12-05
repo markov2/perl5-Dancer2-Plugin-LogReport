@@ -68,7 +68,7 @@ all other messages.
 
 sub bootstrap_color
 {	my $self = shift;
-	return 'success' if $self->inClass('success');
+	return 'success' if $self->taggedWith('success');
 	$reason2color{$self->reason} || 'danger';
 }
 

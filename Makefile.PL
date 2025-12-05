@@ -26,6 +26,7 @@ my %oodist   = (
 	parser   => {
 		syntax         => 'markov',
 		skip_links     => [
+			'Dancer2::Logger::Syslog',
 		],
 		pmhead         => undef,
 	},
@@ -52,7 +53,7 @@ my %oodist   = (
 
 my %requires  = (
 	'Dancer2'               => '0.207',
-	'Log::Report'           => '1.42',
+	'Log::Report'           => '1.44',
 	'Scalar::Util'          => 0,
 	'Log::Report::Template' => 0,
 );
