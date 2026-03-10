@@ -3,6 +3,7 @@ use strict;
 use warnings;
 use version;
 
+use JSON::MaybeXS;
 use Test::More;
 
 BEGIN {
@@ -32,15 +33,17 @@ BEGIN {
     package TestApp;
     use Dancer2;
 
-     # Import options can be passed to Log::Report.
-     use Dancer2::Plugin::LogReport 'test_app', import => 'dispatcher';
-     # or you can just use the plugin to get syntax => 'LONG'
-     # use Dancer2::Plugin::LogReport;
+    use Dancer2::Plugin::LogReport 'test_app';
 
-    set session => 'Simple';
+    # Check that messages can be serialized as YAML
+    set session => 'YAML';
     set logger  => 'LogReport';
 
+    # Configure at least 2 dispatchers so that the message domain becomes an
+    # object. Don't use the default dispatcher though, to prevent noise being
+    # printed during the tests
     dispatcher close => 'default';
+    dispatcher FILE => 'stderr', to => '/dev/null';
 
     # Whether to bork on the root URL
     our $always_bork_before;
@@ -68,15 +71,30 @@ BEGIN {
         $foo->bar;
     };
 
-    get '/write_message/:level/:text' => sub {
+    get '/write_message/:level/:text/:param?' => sub {
+        # Allow a message to be raised with a level, text and optional
+        # parameter
         my $level = param('level');
         my $text  = param('text');
-        eval qq($level "$text");
+        my $param = param('param');
+        $text    .= " {param}"
+            if $param;
+        my $eval  = qq($level __x"$text");
+        $eval    .= qq(, param => "$param")
+            if $param;
+        eval $eval;
     };
 
-    get '/read_messages' => sub {
+    get '/read_message' => sub {
         my $all = session 'messages';
-        join "", map "$_", @$all;
+        my $last = $all->[-1]
+            or return;
+        encode_json {
+            text            => $last->toString,
+            msgid           => $last->msgid,
+            reason          => $last->reason,
+            bootstrap_color => $last->bootstrap_color,
+        };
     };
 
     get '/process' => sub {
@@ -115,13 +133,14 @@ my $url = 'http://localhost';
 my $jar  = HTTP::Cookies->new();
 my $test = Plack::Test->create( TestApp->to_app );
 
-sub read_messages
+sub read_message
 {   my $res = shift;
     $jar->extract_cookies($res);
-    my $req = GET "$url/read_messages";
+    my $req = GET "$url/read_message";
     $jar->add_cookie_header($req);
-    $res = $test->request( $req );
-    my $m = $res->content;
+    my $content = $test->request( $req )->content
+        or return;
+    my $m = decode_json($content);
     $jar->clear;
     $m;
 }
@@ -131,24 +150,41 @@ subtest 'Basic messages' => sub {
 
     # Log a notice message
     {
-        my $req = GET "$url/write_message/notice/notice_text";
+        # Use a message with a parameter to check interpolation
+        my $req = GET "$url/write_message/notice/notice_text/foo";
         $jar->add_cookie_header($req);
         my $res = $test->request( $req );
         ok $res->is_success, "get /write_message";
 
         # Get the message
-        is (read_messages($res), 'notice_text');
+        my $m = read_message($res);
+        is ($m->{text}, 'notice_text foo');
+        is ($m->{bootstrap_color}, 'info');
+    }
+
+    # Log a success message
+    {
+        my $req = GET "$url/write_message/success/success_text/bar";
+        $jar->add_cookie_header($req);
+        my $res = $test->request( $req );
+        ok $res->is_success, "get /write_message";
+
+        # Get the message
+        my $m = read_message($res);
+        is ($m->{text}, 'success_text bar');
+        is ($m->{bootstrap_color}, 'success');
     }
 
     # Log a trace message
     {
-        my $req = GET "$url/write_message/trace/trace_text";
+        my $req = GET "$url/write_message/trace/trace_text/";
         $jar->add_cookie_header($req);
         my $res = $test->request( $req );
         ok $res->is_success, "get /write_message";
 
         # This time it shouldn't make it to the messages session
-        is (read_messages($res), '');
+        my $m = read_message($res);
+        is ($m, undef);
     }
 };
 
@@ -157,7 +193,7 @@ subtest 'Throw error' => sub {
 
     # Throw an uncaught error. Should redirect.
     {
-        my $req = GET "$url/write_message/error/error_text";
+        my $req = GET "$url/write_message/error/error_text/";
         my $res = $test->request( $req );
         ok $res->is_redirect, "get /write_message";
     }
@@ -171,7 +207,9 @@ subtest 'Throw error' => sub {
         is $res->content, '0';
 
         # Check caught message is in session
-        is (read_messages($res), 'Fatal error text');
+        my $m = read_message($res);
+        is ($m->{text}, 'Fatal error text');
+        is ($m->{bootstrap_color}, 'danger');
     }
 };
 
@@ -212,14 +250,18 @@ subtest 'Unexpected exception default page' => sub {
         $jar->add_cookie_header($req);
         my $res = $test->request( $req );
         ok $res->is_redirect, "get /write_message";
-        is (read_messages($res), 'An unexpected error has occurred');
+        my $m = read_message($res);
+        is ($m->{text}, 'An unexpected error has occurred');
+        is ($m->{bootstrap_color}, 'danger');
     }
     {
         my $req = GET "$url/?hook_after_exception=1";
         $jar->add_cookie_header($req);
         my $res = $test->request( $req );
         ok $res->is_redirect, "get /write_message";
-        is (read_messages($res), 'An unexpected error has occurred');
+        my $m = read_message($res);
+        is ($m->{text}, 'An unexpected error has occurred');
+        is ($m->{bootstrap_color}, 'danger');
     }
     {
         local $TestApp::always_bork_before = 1;
@@ -229,7 +271,9 @@ subtest 'Unexpected exception default page' => sub {
         ok !$res->is_redirect, "get /write_message";
         like $res->content, qr/An unexpected error has occurred/;
         local $TestApp::always_bork_before = 0;
-        is (read_messages($res), 'An unexpected error has occurred');
+        my $m = read_message($res);
+        is ($m->{text}, 'An unexpected error has occurred');
+        is ($m->{bootstrap_color}, 'danger');
     }
     {
         local $TestApp::always_bork_after = 1;
@@ -239,7 +283,9 @@ subtest 'Unexpected exception default page' => sub {
         ok !$res->is_redirect, "get /write_message";
         like $res->content, qr/An unexpected error has occurred/;
         local $TestApp::always_bork_after = 0;
-        is (read_messages($res), 'An unexpected error has occurred');
+        my $m = read_message($res);
+        is ($m->{text}, 'An unexpected error has occurred');
+        is ($m->{bootstrap_color}, 'danger');
     }
 };
 
@@ -253,7 +299,7 @@ subtest 'Custom handler' => sub {
     # Throw uncaught errors to see if correct handlers are called.
     # JSON (for API)
     {
-        my $req = GET "$url/write_message/error/api_text";
+        my $req = GET "$url/write_message/error/api_text/";
         my $res = $test->request( $req );
         ok $res->is_success, "get /write_message";
         is $res->content, '{"message":"api_text"}';
@@ -261,7 +307,7 @@ subtest 'Custom handler' => sub {
 
     # HTML without redirect
     {
-        my $req = GET "$url/write_message/error/html_text";
+        my $req = GET "$url/write_message/error/html_text/";
         my $res = $test->request( $req );
         ok $res->is_success, "get /write_message";
         is $res->content, '<p>html_text</p>';
@@ -269,7 +315,7 @@ subtest 'Custom handler' => sub {
 
     # And default (redirect)
     {
-        my $req = GET "$url/write_message/error/error_text";
+        my $req = GET "$url/write_message/error/error_text/";
         my $res = $test->request( $req );
         ok $res->is_redirect, "get /write_message";
     }
