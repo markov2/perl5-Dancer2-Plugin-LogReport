@@ -18,6 +18,7 @@ my %oodist   = (
 
 	include  => [
 		'../Log-Report',
+		'../Log-Report-Optional',
 	],
 
 	use      => [
