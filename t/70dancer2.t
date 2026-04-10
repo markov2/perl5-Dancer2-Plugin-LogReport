@@ -35,8 +35,28 @@ BEGIN {
 
     use Dancer2::Plugin::LogReport 'test_app';
 
-    # Check that messages can be serialized as YAML
-    set session => 'YAML';
+    # Default Sereal session config is to refuse objects
+    set engines => {
+        session => {
+            Sereal => {
+                encoder_args => {
+                    croak_on_bless => 0,
+                    # Messages from later versions of Log::Report do not
+                    # serialize cleanly. Therefore use the object's freeze and
+                    # thaw methods.
+                    freeze_callbacks => 1,
+                },
+                decoder_args => {
+                    refuse_objects => 0,
+                },
+            },
+        },
+    };
+
+    # Check that messages can be serialized as objects. Use the Sereal session
+    # serializer, as it's the easiest to configure to enable blessed objects in
+    # its serialization
+    set session => 'Sereal';
     set logger  => 'LogReport';
 
     # Configure at least 2 dispatchers so that the message domain becomes an
