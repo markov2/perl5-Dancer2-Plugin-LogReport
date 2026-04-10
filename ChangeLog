@@ -10,6 +10,9 @@ version 2.03:
 
 	Improvements:
 	- Log::Report renamed inClass/_class to taggedWith/_tag
+	- Use new freeze-thaw for messages.
+	  https://github.com/markov2/perl5-Log-Report/issues/20
+	- ::Message::bootstrap_color() -> ::bootstrapColor()
 
 version 2.02: Mon 10 Nov 17:38:21 CET 2025
 

@@ -21,7 +21,7 @@ Dancer2::Plugin::LogReport::Message - extended Log::Report message class
   In your template:
 
   [% FOR message IN messages %]
-    <div class="alert alert-[% message.bootstrap_color %]">
+    <div class="alert alert-[% message.bootstrapColor %]">
       [% message.toString | html_entity %]
     </div>
   [% END %]
@@ -37,6 +37,8 @@ welcome.
 
 =chapter METHODS
 
+=section Attributes
+
 =method reason
 Get or set the reason of a message
 =cut
@@ -47,6 +49,16 @@ sub reason
 	$self->{reason};
 }
 
+=method bootstrapColor
+[2.03] Get a suitable bootstrap context color for the message. This can be
+used as per the SYNOPSIS.
+
+CSS class C<success> is used for M<Dancer2::Plugin::LogReport::success()>
+messages, C<info> colors are used for messages C<notice> and below,
+C<warning> is used for C<warning> and C<mistake>, C<danger> is used for
+all other messages.
+=cut
+
 my %reason2color = (
 	TRACE   => 'info',
 	ASSERT  => 'info',
@@ -56,20 +68,19 @@ my %reason2color = (
 	MISTAKE => 'warning',
 );
 
-=method bootstrap_color
-Get a suitable bootstrap context color for the message. This can be
-used as per the SYNOPSIS.
-
-CSS class C<success> is used for M<Dancer2::Plugin::LogReport::success()>
-messages, C<info> colors are used for messages C<notice> and below,
-C<warning> is used for C<warning> and C<mistake>, C<danger> is used for
-all other messages.
-=cut
-
 sub bootstrap_color
 {	my $self = shift;
-	return 'success' if $self->taggedWith('success');
-	$reason2color{$self->reason} || 'danger';
+	$self->taggedWith('success') ? 'success' : ($reason2color{$self->reason} || 'danger');
 }
+
+=method bootstrap_color
+Deprecated.  See M<bootstrapColor()>.
+=cut
+
+*bootstrap_color = \&bootstrapColor;
+
+#-----------------
+=section JSON::XS serialization
+=cut
 
 1;
