@@ -97,23 +97,22 @@ BEGIN {
         my $level = param('level');
         my $text  = param('text');
         my $param = param('param');
-        $text    .= " {param}"
-            if $param;
+        $text    .= " {param}" if $param;
         my $eval  = qq($level __x"$text");
-        $eval    .= qq(, param => "$param")
-            if $param;
+        $eval    .= qq(, param => "$param") if $param;
         eval $eval;
     };
 
     get '/read_message' => sub {
-        my $all = session 'messages';
-        my $last = $all->[-1]
-            or return;
+        my $all  = session 'messages';
+        my $last = $all->[-1] or return;
+        my $msg  = Dancer2::Plugin::LogReport::Message->thaw($last);
+
         encode_json {
-            text            => $last->toString,
-            msgid           => $last->msgid,
-            reason          => $last->reason,
-            bootstrap_color => $last->bootstrap_color,
+            text            => $msg->toString,
+            msgid           => $msg->msgid,
+            reason          => $msg->reason,
+            bootstrap_color => $msg->bootstrap_color,
         };
     };
 
@@ -158,8 +157,7 @@ sub read_message
     $jar->extract_cookies($res);
     my $req = GET "$url/read_message";
     $jar->add_cookie_header($req);
-    my $content = $test->request( $req )->content
-        or return;
+    my $content = $test->request($req)->content or return;
     my $m = decode_json($content);
     $jar->clear;
     $m;
@@ -214,7 +212,7 @@ subtest 'Throw error' => sub {
     # Throw an uncaught error. Should redirect.
     {
         my $req = GET "$url/write_message/error/error_text/";
-        my $res = $test->request( $req );
+        my $res = $test->request($req);
         ok $res->is_redirect, "get /write_message";
     }
 
@@ -222,14 +220,14 @@ subtest 'Throw error' => sub {
     {
         my $req = GET "$url/process";
         $jar->add_cookie_header($req);
-        my $res = $test->request( $req );
+        my $res = $test->request($req);
         ok $res->is_success, "get /write_message";
         is $res->content, '0';
 
         # Check caught message is in session
         my $m = read_message($res);
-        is ($m->{text}, 'Fatal error text');
-        is ($m->{bootstrap_color}, 'danger');
+        is $m->{text}, 'Fatal error text';
+        is $m->{bootstrap_color}, 'danger';
     }
 };
 
@@ -243,7 +241,7 @@ subtest 'Unexpected exception default page' => sub {
     # the default route, so it throws a plain text error
     {
         my $req = GET "$url/";
-        my $res = $test->request( $req );
+        my $res = $test->request($req);
         ok !$res->is_redirect, "No redirect for exception on default route";
         is $res->content, "An unexpected error has occurred", "Plain text exception text correct";
     }
@@ -320,7 +318,7 @@ subtest 'Custom handler' => sub {
     # JSON (for API)
     {
         my $req = GET "$url/write_message/error/api_text/";
-        my $res = $test->request( $req );
+        my $res = $test->request($req);
         ok $res->is_success, "get /write_message";
         is $res->content, '{"message":"api_text"}';
     }
@@ -328,7 +326,7 @@ subtest 'Custom handler' => sub {
     # HTML without redirect
     {
         my $req = GET "$url/write_message/error/html_text/";
-        my $res = $test->request( $req );
+        my $res = $test->request($req);
         ok $res->is_success, "get /write_message";
         is $res->content, '<p>html_text</p>';
     }
@@ -336,7 +334,7 @@ subtest 'Custom handler' => sub {
     # And default (redirect)
     {
         my $req = GET "$url/write_message/error/error_text/";
-        my $res = $test->request( $req );
+        my $res = $test->request($req);
         ok $res->is_redirect, "get /write_message";
     }
 };

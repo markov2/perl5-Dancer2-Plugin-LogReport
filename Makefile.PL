@@ -54,7 +54,7 @@ my %oodist   = (
 
 my %requires  = (
 	'Dancer2'               => '0.207',
-	'Log::Report'           => '1.44',
+	'Log::Report'           => '1.45',
 	'Scalar::Util'          => 0,
 	'Log::Report::Template' => 0,
 );

@@ -4,7 +4,7 @@
 #oodist: testing, however the code of this development version may be broken!
 
 package Dancer2::Plugin::LogReport::Message;
-use base 'Log::Report::Message';
+use parent 'Log::Report::Message';
 
 use strict;
 use warnings;
@@ -14,7 +14,7 @@ use Log::Report   'dancer2-plugin-logreport';
 #--------------------
 =chapter NAME
 
-Dancer2::Plugin::LogReport::Message - extended Log::Report message class
+Dancer2::Plugin::LogReport::Message - extended Log::Report::Message class
 
 =chapter SYNOPSIS
 
@@ -37,10 +37,27 @@ welcome.
 
 =chapter METHODS
 
+=section Constructors
+
+=c_method new %options
+=option  reason $reason
+=default reason undef
+The $reason reflects the exception level which is attached to message,
+often derived from a caught exception.
+=cut
+
+sub init($)
+{	my ($self, $args) = @_;
+	$self->SUPER::init($args);
+	$self->{reason} = $args->{reason};
+	$self;
+}
+
+#----------------
 =section Attributes
 
-=method reason
-Get or set the reason of a message
+=method reason [$reason]
+Get or set the reason of a message.
 =cut
 
 sub reason
@@ -68,7 +85,7 @@ my %reason2color = (
 	MISTAKE => 'warning',
 );
 
-sub bootstrap_color
+sub bootstrapColor()
 {	my $self = shift;
 	$self->taggedWith('success') ? 'success' : ($reason2color{$self->reason} || 'danger');
 }
@@ -80,7 +97,50 @@ Deprecated.  See M<bootstrapColor()>.
 *bootstrap_color = \&bootstrapColor;
 
 #-----------------
-=section JSON::XS serialization
+=section Serialization
+
+[2.03] Log messages are/can be stored in the Session object.  The Session
+object may be cached in a file, in various formats.  To be able to save
+and restore these message objects from this session serialization, we
+need to freeze and thaw the object at the right moment.  This happens
+transparently.
+
+=subsection JSON::XS serialization
+
+For session serialization in the database, put this in your
+configuration:
+
+  engines:
+    session:
+      DBIC:
+        serializer: JSON
+        serialize_options:
+          allow_tags: 1
+        deserialize_options:
+          allow_tags: 1
+
+=method FREEZE $serializer
+=error unsupported serializer '$s' for message FREEZE.
 =cut
+
+sub FREEZE($)
+{	my ($self, $ser) = @_;
+	$ser eq 'JSON'
+		or error __x"unsupported serializer '{s UNKNOWN}' for message FREEZE.", s => $ser;
+
+	$self->freeze;
+}
+
+=c_method THAW $serializer, $msg
+=error unsupported serializer '$s' for message THAW.
+=cut
+
+sub THAW($@)
+{	my ($class, $ser, $msg) = @_;
+	$ser eq 'JSON'
+		or error __x"unsupported serializer '{s UNKNOWN}' for message THAW.", s => $ser;
+
+	$class->thaw($msg);
+}
 
 1;

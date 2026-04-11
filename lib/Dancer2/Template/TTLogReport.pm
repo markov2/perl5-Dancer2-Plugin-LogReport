@@ -67,7 +67,7 @@ Standard M<Moo> with Dancer2::Core::Role::Template extensions.
 sub _build_engine { $_[0]->tt; $_[0] }
 
 #--------------------
-=section Accessors
+=section Attributes
 
 =method tt
 Returns the Log::Report::Template object which is performing the

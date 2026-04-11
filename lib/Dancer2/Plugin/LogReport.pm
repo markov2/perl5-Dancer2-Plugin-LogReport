@@ -667,7 +667,26 @@ no need to use this specific plugin. Instead, you should simply
 C<use Log::Report> to negate the need of loading all the Dancer2
 specific code.
 
-=section In use
+=subsection Session serialization
+
+The Dancer2 session is used to maintain Log::Report::Message objects.
+However, the session is stored in the database in serialized form
+(usually in JSON syntax).  To make this work, the message objects
+need to be frozen.
+
+Add this to your config:
+
+  engines:
+    session:
+      DBIC:
+        ...
+        serializer: JSON
+        serialize_options:
+          allow_tags: 1
+        deserialize_options:
+          allow_tags: 1
+
+=section In Use
 
 =subsection Logging debug information
 
