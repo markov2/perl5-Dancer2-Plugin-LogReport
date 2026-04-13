@@ -4,9 +4,7 @@
 Unless noted otherwise, these changes where initiated and applied by
 Mark Overmeer.
 
-#XXX requires Log::Report 1.44 to be released first
-
-version 2.03:
+version 2.03: Mon 13 Apr 13:12:38 CEST 2026
 
 	Improvements:
 	- Log::Report renamed inClass/_class to taggedWith/_tag
