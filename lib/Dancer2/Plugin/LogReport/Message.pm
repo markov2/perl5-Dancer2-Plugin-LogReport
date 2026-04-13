@@ -3,8 +3,10 @@
 #oodist: during its release in the distribution.  You can use this file for
 #oodist: testing, however the code of this development version may be broken!
 
+BEGIN { require Log::Report; }  # require very early, compilation order issue
+
 package Dancer2::Plugin::LogReport::Message;
-use parent 'Log::Report::Message';
+use base 'Log::Report::Message';
 
 use strict;
 use warnings;
@@ -94,7 +96,9 @@ sub bootstrapColor()
 Deprecated.  See M<bootstrapColor()>.
 =cut
 
-*bootstrap_color = \&bootstrapColor;
+{ no warnings;
+  *bootstrap_color = \&bootstrapColor;
+}
 
 #-----------------
 =section Serialization
@@ -104,8 +108,6 @@ object may be cached in a file, in various formats.  To be able to save
 and restore these message objects from this session serialization, we
 need to freeze and thaw the object at the right moment.  This happens
 transparently.
-
-=subsection JSON::XS serialization
 
 For session serialization in the database, put this in your
 configuration:
@@ -119,28 +121,23 @@ configuration:
         deserialize_options:
           allow_tags: 1
 
+
 =method FREEZE $serializer
-=error unsupported serializer '$s' for message FREEZE.
+JSON (both JSON::XS and JSON::PP) and M<Sereal> should work as
+$serializer: they both support the CBOR::XS interface.
 =cut
 
 sub FREEZE($)
 {	my ($self, $ser) = @_;
-	$ser eq 'JSON'
-		or error __x"unsupported serializer '{s UNKNOWN}' for message FREEZE.", s => $ser;
-
-	$self->freeze;
+	$self->freeze(serializer => $ser);
 }
 
 =c_method THAW $serializer, $msg
-=error unsupported serializer '$s' for message THAW.
 =cut
 
 sub THAW($@)
 {	my ($class, $ser, $msg) = @_;
-	$ser eq 'JSON'
-		or error __x"unsupported serializer '{s UNKNOWN}' for message THAW.", s => $ser;
-
-	$class->thaw($msg);
+	$class->thaw($msg, serializer => $ser);
 }
 
 1;

@@ -31,7 +31,7 @@ ok ! ref $freeze->{$_}, "... non-ref $_"
 
 ### THAW
 
-my $thaw = Dancer2::Plugin::LogReport::Message->THAW($freeze);
+my $thaw = Dancer2::Plugin::LogReport::Message->THAW(JSON => $freeze);
 ok defined $thaw, 'Thaw message';
 isa_ok $thaw, 'Dancer2::Plugin::LogReport::Message', '... ';
 is $thaw->reason, 'error', '... reason attribute';

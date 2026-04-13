@@ -43,13 +43,11 @@ my %oodist   = (
 		publish        => "$publish/raw",
 	},
 
-	generate => [
-	  {
+	generate => [ {
 		# Add real pod to the releases
 		format         => 'pod3',
 		podtail        => undef,
-	  },
-	],
+	}, ],
 );
 
 my %requires  = (
@@ -57,6 +55,13 @@ my %requires  = (
 	'Log::Report'           => '1.45',
 	'Scalar::Util'          => 0,
 	'Log::Report::Template' => 0,
+);
+
+my %optional = (
+	'Dancer2::Session::Sereal' => '0.003',
+	'Plack::Test'              => 0,
+	'HTTP::Cookies'            => 0,
+	'HTTP::Request::Common'    => 0,
 );
 
 WriteMakefile
@@ -82,7 +87,8 @@ WriteMakefile
 		},
 		prereqs => {
 			runtime => {
-				requires => \%requires,
+				requires   => \%requires,
+				recommends => \%optional,
 			},
 			develop => {
 				requires => {

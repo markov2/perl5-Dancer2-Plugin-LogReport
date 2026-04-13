@@ -9,15 +9,14 @@ use warnings;
 use strict;
 use version;
 
-BEGIN { use Log::Report () }  # require very early
-
-use Dancer2::Plugin;    # register
+require Log::Report;
 use Dancer2::Plugin::LogReport::Message ();
 
 use Log::Report  'dancer2-plugin-logreport',
 	syntax        => 'REPORT',
 	message_class => 'Dancer2::Plugin::LogReport::Message';
 
+use Dancer2::Plugin;    # register()
 use Scalar::Util qw/blessed refaddr/;
 
 my %_all_dsls;  # The DSLs for each app within the Dancer application
