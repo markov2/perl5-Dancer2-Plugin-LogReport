@@ -9,5 +9,6 @@ lib/Dancer2/Plugin/LogReport.pm
 lib/Dancer2/Plugin/LogReport/Message.pm
 lib/Dancer2/Template/TTLogReport.pm
 t/00use.t
+t/10msg-freeze.t
 t/70dancer2.t
 xt/99pod.t
